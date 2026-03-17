@@ -1,5 +1,9 @@
 "use client";
-import Image from "next/image";
+<img
+  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80"
+  alt="Axionix Dashboard"
+  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "1rem" }}
+/>
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { MessageCircle, Mail, Instagram, ArrowRight, Zap, Bot, Globe, Lock } from "lucide-react";
 
