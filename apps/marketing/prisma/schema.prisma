@@ -1,0 +1,95 @@
+// Axionix — Shared data model
+// Designed to be multi-product ready (Marketing, Booking, etc.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum GenerationType {
+  STRATEGY
+  CONTENT
+  IMAGE
+  VIDEO
+}
+
+// ─── Models ───────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  plan         Plan     @default(FREE)
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business    Business?
+  generations Generation[]
+  usages      MonthlyUsage[]
+
+  @@map("users")
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // restaurant, ecommerce, gym, etc.
+  objective   String   // sales, branding, followers, traffic
+  level       String   // beginner, intermediate, advanced
+  niche       String?
+  description String?
+  website     String?
+  instagram   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("businesses")
+}
+
+model Generation {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      GenerationType
+  input     Json
+  output    Json
+  tokens    Int?           // LLM tokens used
+  cost      Float?         // USD cost (internal tracking)
+  createdAt DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, type])
+  @@map("generations")
+}
+
+// Monthly usage counter per user — reset each billing cycle
+model MonthlyUsage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period      String   // YYYY-MM format
+  textCount   Int      @default(0)
+  imageCount  Int      @default(0)
+  videoCount  Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, period])
+  @@map("monthly_usages")
+}
